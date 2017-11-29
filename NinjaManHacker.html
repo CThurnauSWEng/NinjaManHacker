@@ -1,0 +1,394 @@
+<html>
+<head>
+    <title>NinjaMan</title>
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        .row {
+            line-height: 0;
+        }
+        .wall {
+            background-color: blue; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+        }
+        .sushi {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('sushi.png');
+            background-size: contain;
+        }
+        .onigiri {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('onigiri.png');
+            background-size: contain;
+        }
+        .blank {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;           
+        }
+        #ninjaman {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('ninja.gif');
+            background-size: contain;
+            position: absolute;
+            left: 40px;
+            top: 40px;
+        }
+        #scaredyElement {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('scaredy.png');
+            background-size: contain;
+            position: absolute;
+        }
+        #pumpkyElement {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('pumpky.gif');
+            background-size: contain;
+            position: absolute;
+        }
+        #redElement {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('red.gif');
+            background-size: contain;
+            position: absolute;
+        }
+        #blueyElement {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('bluey.gif');
+            background-size: contain;
+            position: absolute;
+        }
+        #pinkyElement {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block;
+            background-image: url('pinky.gif');
+            background-size: contain;
+            position: absolute;
+        }
+		#scoreBox {
+            background-color: black;
+			width: 100px;
+			height: 43px;
+            position: absolute;
+            left: 80px;
+            top: 500px;
+            color: yellow;
+            padding: 10px;
+		}
+        p {
+            text-indent: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id='world'></div>
+    <div id='ghosts'></div>  
+    <div id='ninjaman'></div>
+    <div id='scoreDiv'></div>
+</body>
+<script type="text/javascript">
+    var world = [
+        [1,1,1,1,1,1,1],
+        [1,0,2,2,1,1,1],
+        [1,2,1,3,1,1,1],
+        [1,2,2,2,1,1,1],
+        [1,0,2,2,1,1,1],
+        [1,2,1,3,1,1,1],
+        [1,2,2,2,1,1,1],
+        [1,0,2,2,1,1,1],
+        [1,2,1,3,1,1,1],
+        [1,2,2,2,1,1,1],
+        [1,1,1,1,1,1,1],
+     ];
+
+    var worldRows = world.length;
+    var worldColumns = world[1].length;
+
+     var worldDict = {
+        0 : 'blank',
+        1 : 'wall',
+        2 : 'sushi',
+        3 : 'onigiri',
+        4 : 'sushi'    /* extra sushi! */
+     }
+
+    var squareSize = 40;
+    var initialRow = 1;
+    var initialColumn = 1;
+    var dirction = 'down';
+    var leftvalue = (world[0].length -1) * squareSize;
+    var topvalue = (world.length -1) * squareSize;
+    var score = 0;
+    var sushiScore = 10;
+    var onigiriScore = 5;
+
+    var ninjaMan = "";
+       ninjaMan = {
+        "row"     : initialRow,
+        "column"  : initialColumn,
+        "strikes" : 0,
+        "alive"   : 1
+    }
+
+    var directionDict = {
+        0 : 'left',
+        1 : 'right',
+        2 : 'up',
+        3 : 'down'
+    }
+
+    /* initial location and birthday for each ghost*/
+    var ghostArray = [
+        { /* scaredy*/
+        "row"    : initialRow + 1,
+        "column" : initialColumn +1,
+        "alive"  : 0,
+        "bday"   : 5
+        },
+
+        { /* bluey */
+        "row"    : initialRow + 1,
+        "column" : initialColumn +1,
+        "alive"  : 0,
+        "bday"   : 10
+        },
+
+        { /* pinky */
+        "row"    : initialRow + 2,
+        "column" : initialColumn +2,
+        "alive"  : 0,
+        "bday"   : 15
+        },
+
+        { /* pumpky */
+        "row"    : initialRow + 1,
+        "column" : initialColumn +1,
+        "alive"  : 0,
+        "bday"   : 20
+        },
+
+        { /* red */
+        "row"    : initialRow + 2,
+        "column" : initialColumn +2,
+        "alive"  : 0,
+        "bday"   : 25
+        }
+    ];
+
+    var ghostDict = {
+        0 : 'scaredy',
+        1 : 'bluey',
+        2 : 'pinky',
+        3 : 'pumpky',
+        4 : 'red'
+    }
+
+    var gameCounter = 0;
+
+    initWorld();
+
+    drawScoreBox();
+ 
+    drawWorld();
+
+    drawNinjaman();
+
+    document.onkeydown = function(e){
+        if (ninjaMan.alive){  /* need to indent all below if this works */
+            gameCounter++;
+       
+            if(e.keyCode == 37 && ninjaMan.column > 0) { // LEFT
+                if (worldDict[world[ninjaMan.row][(ninjaMan.column-1)]] != 'wall'){
+                    ninjaMan.column--;
+                    direction = 'left';
+                }
+            }
+            else if (e.keyCode == 39 && ninjaMan.column < world[0].length-1) { // RIGHT
+                if (worldDict[world[ninjaMan.row][(ninjaMan.column+1)]] != 'wall'){
+                    ninjaMan.column++;
+                    direction = 'right'; 
+                }           
+            }
+            else if (e.keyCode == 40 && ninjaMan.row < world.length-1) { // DOWN
+                if (worldDict[world[ninjaMan.row+1][ninjaMan.column]] != 'wall'){
+                    ninjaMan.row++;
+                    direction = 'down';
+                }   
+            }
+            else if(e.keyCode == 38 && ninjaMan.row > 0){ // UP
+                if (worldDict[world[ninjaMan.row-1][ninjaMan.column]] != 'wall'){
+                    ninjaMan.row--;
+                    direction = 'top';
+                }
+            }
+
+            /* is there something to eat at this location? */
+            if (worldDict[world[ninjaMan.row][ninjaMan.column]] == 'sushi') {
+                world[ninjaMan.row][ninjaMan.column] = 0;
+                score +=sushiScore;
+            }
+            else if (worldDict[world[ninjaMan.row][ninjaMan.column]] == 'onigiri') {
+                world[ninjaMan.row][ninjaMan.column] = 0;
+                score +=onigiriScore;
+            }
+        
+            drawNinjaman(ninjaMan);
+
+            /* ghost bday? */
+            for (var i = 0; i < ghostArray.length; i++){
+                if (gameCounter == ghostArray[i].bday){
+                    ghostArray[i].alive = 1;
+                }
+            }
+        
+            updateGhosts();
+
+            drawWorld();
+
+        } /* if ninjaMan alive */
+
+        drawScoreBox();
+ 
+    }
+
+    function updateGhosts(){
+        for (var i = 0; i < ghostArray.length; i++){
+            if (ghostArray[i].alive)
+            { 
+                moveGhost(ghostArray[i]);
+            }
+        }
+        drawGhosts();
+    }
+
+    function randomIntFromInterval(min,max){
+        return Math.floor(Math.random()*(max-min+1)+min);
+    }
+
+    function initWorld(){
+        for(var row =1; row < world.length-1; row++){
+            for(var col = 1; col < world[row].length-1; col++){
+                world[row][col] = randomIntFromInterval(0,4);
+            }
+        }
+        /* set the space where ninjaMan first appears to be a blank */
+        world[ninjaMan.row][ninjaMan.column] = 0;
+
+        /* need to do this for ghosts too because my ghosts can't go through walls */
+        for (var i = 0; i< ghostArray.length; i++){
+            world[ghostArray[i].row][ghostArray[i].column] = 0;
+        }
+    }
+
+    function drawScoreBox(){
+        content = "<div id='scoreBox'>";
+        content += "<p>  SCORE: "+score+"</p>";
+        content += "<p>  STRIKES: "+ninjaMan.strikes+"</p>";
+        if (ninjaMan.alive != 1){
+            content += "<p> GAME OVER </p>"
+        }
+        content += "</div>";
+        document.getElementById("scoreDiv").innerHTML = content;
+    }
+
+    function drawWorld(){
+        output = "";
+
+        for(var row =0; row < world.length; row++){
+            output += "<div class = 'row'></div>"
+            for(var x = 0; x < world[row].length; x++){
+                output += "<div class = '" + worldDict[world[row][x]] + "'></div>"
+            }
+            output +="</div>"
+        }
+        document.getElementById('world').innerHTML = output;
+     }
+
+     function drawNinjaman() {
+        document.getElementById("ninjaman").style.top = (ninjaMan.row*squareSize)+"px"
+        document.getElementById("ninjaman").style.left = (ninjaMan.column*squareSize)+"px"
+     }
+
+     function moveGhost(ghost){
+        var ghostDirection = "";
+        ghostDirection = directionDict[randomIntFromInterval(0,3)];
+        /* ghosts are not too smart, they just move randomly */
+        /* ghosts can't go through walls either, even though they are ghosts :) */
+        if (ghostDirection == 'left' && worldDict[world[ghost.row][ghost.column-1]] != 'wall'){
+            ghost.column--;
+        }
+        else if (ghostDirection == 'right' && worldDict[world[ghost.row][ghost.column+1]] != 'wall'){
+            ghost.column++;
+        }
+        else if (ghostDirection == 'down' && worldDict[world[ghost.row+1][ghost.column]] != 'wall'){
+            ghost.row++;
+        }
+        else if (ghostDirection == 'up' && worldDict[world[ghost.row-1][ghost.column]] != 'wall'){
+            ghost.row--;
+        }
+        if (ghost.row == ninjaMan.row && ghost.column == ninjaMan.column){
+            ghost.alive = 0;
+            collision(); 
+        }
+    }
+    function collision(){
+        ninjaMan.strikes++;
+        if (ninjaMan.strikes == 3){
+                ninjaMan.alive = 0;
+            }
+    }
+
+     function drawGhosts() { 
+        content = "";
+        for (var i = 0; i < ghostArray.length; i++){
+            if (ghostArray[i].alive){
+                content += "<div id='"+ghostDict[i]+"Element'></div>";
+            }
+        }
+        document.getElementById('ghosts').innerHTML = content;
+
+        for (var i = 0; i < ghostArray.length; i++){
+            if (ghostArray[i].alive){
+                document.getElementById(ghostDict[i]+'Element').style.top = (ghostArray[i].row*squareSize)+"px"
+                document.getElementById(ghostDict[i]+'Element').style.left = (ghostArray[i].column*squareSize)+"px"            
+            }
+        }
+     }
+
+
+     /* Current Limiations: 
+       - ghosts should be created inside of a game loop and appear and disappear
+    
+    */
+
+
+</script>
+</html>
